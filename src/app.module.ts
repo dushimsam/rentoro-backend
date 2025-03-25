@@ -3,6 +3,7 @@ import { AppConfigModule } from './configs/app-configs.module';
 import { FounderModule } from './modules/founders/founder.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppConfigService } from './configs/app-configs.service';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AppConfigService } from './configs/app-configs.service';
         appConfigService.getPostgresInfo(),
     }),
     FounderModule,
+    AuthModule,
   ],
   controllers: [],
   providers: [],
