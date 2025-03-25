@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { GoogleUserDto } from './dto/google-user.dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { UsersService } from '../users/users.service';
 
 
 @Injectable()

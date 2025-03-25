@@ -4,6 +4,7 @@ import { FounderModule } from './modules/founders/founder.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppConfigService } from './configs/app-configs.service';
 import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { AuthModule } from './modules/auth/auth.module';
     }),
     FounderModule,
     AuthModule,
+    UsersModule,
   ],
   controllers: [],
   providers: [],
