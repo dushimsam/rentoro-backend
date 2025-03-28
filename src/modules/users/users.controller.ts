@@ -4,6 +4,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from './entities/user.entity';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('users')
 export class UsersController {
@@ -11,6 +12,7 @@ export class UsersController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   async getProfile(@GetUser() user: User) {
     // The user is automatically retrieved from the JWT token
     return user;
@@ -18,6 +20,7 @@ export class UsersController {
 
   @Put('me')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   async updateProfile(
     @GetUser('id') userId: string,
     @Body() updateUserDto: UpdateUserDto,
