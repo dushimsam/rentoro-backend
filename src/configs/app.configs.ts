@@ -11,6 +11,11 @@ export async function enableAppConfig(app: INestApplication): Promise<void> {
 
   app.use(helmet());
 
+  app.enableCors({
+    origin:  '*', //TODO: before we go production we need to change this to the actual domain,
+    methods: '*',
+  });
+
   await setupSwaggerDocumentation(app);
 }
 
