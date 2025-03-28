@@ -19,6 +19,17 @@ async function setupSwaggerDocumentation(app: INestApplication) {
     .setTitle('Rentoro Backend APIs')
     .setDescription('The Rentoro Backend APIs')
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'access-token', 
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
 
