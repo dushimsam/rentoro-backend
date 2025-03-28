@@ -40,6 +40,34 @@ export class AuthService {
     return user;
   }
 
+  // Explicitly create a user account for signup flow
+  async createUserFromOAuth(profile: GoogleUserDto): Promise<any> {
+    const { email, firstName, lastName, picture } = profile;
+    
+    // First check if user already exists
+    let user = await this.usersService.findByEmail(email);
+    
+    if (!user) {
+      // Create a new user
+      user = await this.usersService.create({
+        email,
+        firstName,
+        lastName,
+        picture,
+        isEmailVerified: true, // Google already verified the email
+      });
+    } else {
+      // Update user info
+      await this.usersService.update(user.id, {
+        firstName,
+        lastName,
+        picture,
+      });
+    }
+    
+    return user;
+  }
+
   async login(user: any) {
     const payload: JwtPayload = { 
       sub: user.id, 
@@ -47,21 +75,12 @@ export class AuthService {
       roles: user.roles || ['user'],
     };
     
-    const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(
-      { sub: user.id },
-      { 
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-        expiresIn: '7d', // Refresh token expires in 7 days
-      },
-    );
-    
-    // Store refresh token hash in user record for additional security
-    await this.usersService.storeRefreshToken(user.id, refreshToken);
+    const token = this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('JWT_SECRET'),
+    });
     
     return {
-      accessToken,
-      refreshToken,
+      token,
     };
   }
 
