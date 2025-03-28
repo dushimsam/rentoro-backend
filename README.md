@@ -69,12 +69,7 @@ GOOGLE_SIGNUP_CALLBACK_URL=http://localhost:3000/api/v1/auth/google/signup/callb
 FRONTEND_URL=http://localhost:3000
 ```
 
-4. Run database migrations:
-```bash
-npm run migration:run
-```
-
-5. Start the server:
+4. Start the server:
 ```bash
 npm run start:dev
 ```
