@@ -28,8 +28,9 @@ export class CarsService {
   async findAll(filters?: any): Promise<Car[]> {
     const queryBuilder = this.carsRepository
       .createQueryBuilder('car')
+      .leftJoinAndSelect('car.owner', 'owner') // Add join to owner
       .where('car.isValidated = :isValidated', { isValidated: true });
-
+  
     if (filters) {
       if (filters.make) {
         queryBuilder.andWhere('car.make ILIKE :make', { make: `%${filters.make}%` });
@@ -53,13 +54,13 @@ export class CarsService {
         queryBuilder.andWhere('car.location ILIKE :location', { location: `%${filters.location}%` });
       }
     }
-
+  
     // Only show available cars by default
     queryBuilder.andWhere('car.isAvailable = :isAvailable', { isAvailable: true });
-
+  
     return queryBuilder.getMany();
   }
-
+  
   async findOwnerCars(userId: string): Promise<Car[]> {
     return this.carsRepository.find({
       where: { ownerId: userId },
