@@ -193,7 +193,10 @@ export class CarsController {
         description: { type: 'string' },
         ownerId: { type: 'string', format: 'uuid' },
         createdAt: { type: 'string', format: 'date-time' },
-        updatedAt: { type: 'string', format: 'date-time' }
+        updatedAt: { type: 'string', format: 'date-time' },
+        owner: {
+          type: 'object',
+        }
       }
     }
   })

@@ -69,6 +69,7 @@ export class CarsService {
   async findOne(id: string): Promise<Car> {
     const car = await this.carsRepository.findOne({
       where: { id },
+      relations: ['owner']
     });
 
     if (!car) {
