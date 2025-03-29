@@ -38,7 +38,8 @@ export class CarsController {
         description: { type: 'string', example: 'Fuel-efficient sedan with excellent condition' },
         ownerId: { type: 'string', format: 'uuid' },
         createdAt: { type: 'string', format: 'date-time' },
-        updatedAt: { type: 'string', format: 'date-time' }
+        updatedAt: { type: 'string', format: 'date-time' },
+        imageUrls: { type: 'array', items: { type: 'string' } }
       }
     }
   })

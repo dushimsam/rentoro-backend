@@ -69,4 +69,13 @@ export class CreateCarDto {
     required: false
   })
   description?: string;
+
+  @IsString({ each: true })
+  @IsOptional()
+  @ApiProperty({ 
+    description: 'Array of image URLs', 
+    example: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg'],
+    required: false
+  })
+  imageUrls?: string[];
 }

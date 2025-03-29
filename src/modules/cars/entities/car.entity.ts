@@ -43,6 +43,9 @@ export class Car {
   @Column({ name: 'owner_id' })
   ownerId: string;
 
+  @Column({ name: 'image_urls', type: 'json', nullable: true, default: '[]' })
+  imageUrls: string[];
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
