@@ -1,19 +1,94 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Req } from '@nestjs/common';
+import { 
+  Controller, 
+  Get, 
+  Post, 
+  Body, 
+  Param, 
+  UseGuards, 
+  Req, 
+  Headers, 
+  RawBodyRequest,
+  BadRequestException
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import { CreatePaymentIntentDto } from './dto/create-payment-intent.dto';
+import { ConfirmPaymentDto } from './dto/confirm-payment.dto';
+import { 
+  ApiTags, 
+  ApiOperation, 
+  ApiResponse, 
+  ApiBearerAuth, 
+  ApiParam, 
+  ApiHeader,
+  ApiBody
+} from '@nestjs/swagger';
 import { PaymentMethod, PaymentStatus } from './entities/payment.entity';
+import { Request } from 'express';
 
 @ApiTags('payments')
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
+  @Post('create-payment-intent')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Create a Stripe payment intent' })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'The payment intent has been successfully created.',
+    schema: {
+      type: 'object',
+      properties: {
+        paymentId: { type: 'string', format: 'uuid', example: '9012' },
+        clientSecret: { type: 'string', example: 'pi_1234_secret_5678' },
+        amount: { type: 'number', example: 229.95 },
+        currency: { type: 'string', example: 'usd' }
+      }
+    }
+  })
+  @ApiResponse({ status: 400, description: 'Bad request - Invalid rental request or already paid' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  createPaymentIntent(
+    @Body() createPaymentIntentDto: CreatePaymentIntentDto, 
+    @Req() req
+  ) {
+    return this.paymentsService.createPaymentIntent(createPaymentIntentDto, req.user.id);
+  }
+
+  @Post('confirm')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Confirm a payment after successful frontend payment processing' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'The payment has been successfully confirmed.',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid', example: '9012' },
+        status: { type: 'string', enum: Object.values(PaymentStatus), example: PaymentStatus.COMPLETED },
+        updatedAt: { type: 'string', format: 'date-time' }
+      }
+    }
+  })
+  @ApiResponse({ status: 400, description: 'Bad request - Invalid payment status' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not your payment' })
+  @ApiResponse({ status: 404, description: 'Payment not found' })
+  confirmPayment(
+    @Body() confirmPaymentDto: ConfirmPaymentDto, 
+    @Req() req
+  ) {
+    return this.paymentsService.confirmPayment(confirmPaymentDto, req.user.id);
+  }
+
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Create a new payment' })
+  @ApiOperation({ summary: 'Create a new payment (legacy method)' })
   @ApiResponse({ 
     status: 201, 
     description: 'The payment has been successfully created.',
@@ -68,7 +143,9 @@ export class PaymentsController {
                 properties: {
                   make: { type: 'string' },
                   model: { type: 'string' },
-                  year: { type: 'integer' }
+                  year: { type: 'integer' },
+                  color: { type: 'string' },
+                  licensePlate: { type: 'string' }
                 }
               }
             }
@@ -159,9 +236,24 @@ export class PaymentsController {
   }
 
   @Post('webhook')
-  @ApiOperation({ summary: 'Payment gateway webhook' })
+  @ApiOperation({ summary: 'Stripe webhook endpoint' })
+  @ApiHeader({ name: 'stripe-signature', required: true, description: 'Stripe webhook signature' })
   @ApiResponse({ status: 200, description: 'Webhook processed successfully' })
-  webhook(@Body() payload: any) {
-    return this.paymentsService.handleWebhook(payload);
+  @ApiResponse({ status: 400, description: 'Invalid signature or payload' })
+  async webhook(
+    @Req() req: RawBodyRequest<Request>,
+    @Headers('stripe-signature') signature: string
+  ) {
+    if (!signature) {
+      throw new BadRequestException('Missing stripe-signature header');
+    }
+    
+    if (!req.rawBody) {
+      throw new BadRequestException('Missing request body');
+    }
+    
+    await this.paymentsService.handleWebhook(signature, req.rawBody);
+    
+    return { received: true };
   }
 }
