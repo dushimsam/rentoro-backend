@@ -82,10 +82,6 @@ export class RentalRequestsService {
       throw new NotFoundException(`Rental request with ID ${id} not found`);
     }
     
-    if (request.clientId !== userId) {
-      throw new ForbiddenException('You do not have permission to view this rental request');
-    }
-    
     return request;
   }
 
