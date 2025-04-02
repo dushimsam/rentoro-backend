@@ -114,6 +114,7 @@ export class RentalRequestsService {
     const car = await this.carsService.findOne(request.carId);
     const rentalDays = Math.max(1, differenceInDays(request.endDate, request.startDate));
     request.totalCost = rentalDays * Number(car.dailyRate);
+    request.status = updateRentalRequestDto.status || RentalRequestStatus.APPROVED;
     
     return this.rentalRequestsRepository.save(request);
   }
