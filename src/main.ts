@@ -1,6 +1,8 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
 import { NestFactory } from '@nestjs/core';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { join } from 'path';
 import { AppModule } from './app.module';
 import { enableAppConfig } from './configs/app.configs';
 import { AppConfigService } from './configs/app-configs.service';
@@ -33,5 +35,18 @@ async function bootstrap() {
       `${APP_NAME} is running on port => ${port} in ${environment} mode  🚀`,
     );
   });
+
+  // Start gRPC microservice
+  const grpcMicroservice = app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.GRPC,
+    options: {
+      package: 'cars',
+      protoPath: join(__dirname, 'modules/cars/proto/cars.proto'),
+      url: 'localhost:50051',
+    },
+  });
+
+  await app.startAllMicroservices();
+  console.warn(`gRPC microservice is running on localhost:50051  микросервис запущен  🚀`);
 }
 bootstrap();
