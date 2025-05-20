@@ -12,6 +12,7 @@ This is the backend API for a car rental system that allows car owners to list t
 - **Rental Process** - making and managing rental requests
 - **Payment Handling** - processing payments and refunds
 - **Admin Controls** - car validation and platform management
+- **gRPC API** - for CarService operations (GetCar, ListCars)
 
 ## Technology Stack
 
@@ -20,6 +21,7 @@ This is the backend API for a car rental system that allows car owners to list t
 - PostgreSQL
 - JWT Authentication
 - Swagger API Documentation
+- gRPC Microservice
 
 ## Getting Started
 
@@ -73,10 +75,11 @@ FRONTEND_URL=http://localhost:3000
 ```bash
 npm run start:dev
 ```
+The HTTP server will run on the port specified in your `.env` file (e.g., 3000), and the gRPC server will run on `localhost:50051`.
 
 ## API Documentation
 
-The API documentation is available via Swagger UI at `/api-docs` when the server is running.
+The API documentation for the RESTful endpoints is available via Swagger UI at `/api-docs` when the server is running.
 
 ### Using Swagger with Authentication
 
@@ -88,7 +91,7 @@ The API documentation is available via Swagger UI at `/api-docs` when the server
 6. Click "Authorize" and close the dialog
 7. Now you can access all protected endpoints through Swagger
 
-### Key API Endpoints
+### Key API Endpoints (RESTful)
 
 #### Authentication
 - `GET /auth/google` - Initiate Google SSO login flow
@@ -136,6 +139,73 @@ The API documentation is available via Swagger UI at `/api-docs` when the server
 - `GET /admin/rental-requests` - List all rental requests
 - `GET /admin/payments` - List all payments
 
+## gRPC API
+
+The server also supports gRPC communication for certain services. This can be useful for high-performance internal communication or for clients that prefer gRPC.
+
+### Proto Definition
+The Protocol Buffer definition for the gRPC services can be found at:
+`src/modules/cars/proto/cars.proto`
+
+### Generating Client Stubs
+To interact with the gRPC API, you'll need to generate client stubs from the `.proto` file. The method for doing this depends on your programming language and gRPC tooling.
+
+**For Node.js / TypeScript:**
+You can use `grpc-tools` and `@grpc/grpc-js`. First, install the necessary packages:
+```bash
+npm install grpc-tools @grpc/grpc-js
+# or
+yarn add grpc-tools @grpc/grpc-js
+```
+Then, you can generate the client stubs using a command similar to this (run from the project root):
+```bash
+npx grpc_tools_node_protoc \
+    --js_out=import_style=commonjs,binary:./grpc-client \
+    --grpc_out=grpc_js:./grpc-client \
+    --plugin=protoc-gen-grpc_js=./node_modules/.bin/grpc_tools_node_protoc_plugin \
+    src/modules/cars/proto/cars.proto
+```
+This command will generate JavaScript and gRPC service definition files in a `grpc-client` directory. You might need to adjust paths and output options based on your project structure. For TypeScript, you might also want to generate `.d.ts` files using `protoc-gen-ts`.
+
+**For other languages:**
+Refer to the official gRPC documentation for instructions on generating client code for your specific language (e.g., Go, Python, Java, C#). You will typically use `protoc` with the appropriate language-specific plugin.
+
+### Available Services and Methods
+
+**Service:** `cars.CarService`
+**gRPC Server Address:** `localhost:50051`
+
+**RPC Methods:**
+1.  **`GetCar(GetCarRequest) returns (CarResponse)`**
+    *   Retrieves details for a specific car by its ID.
+    *   Request: `{ "id": "your-car-id" }`
+    *   Response: Contains the car details.
+
+2.  **`ListCars(ListCarsRequest) returns (CarsResponse)`**
+    *   Lists available cars. (Currently, no request filters are implemented in the example).
+    *   Request: `{}` (empty, as per current proto)
+    *   Response: Contains a list of cars.
+
+### Testing with `grpcurl`
+If you have `grpcurl` installed, you can use it to interact with the gRPC API from the command line.
+
+**Example: Calling `GetCar`**
+```bash
+grpcurl -plaintext \
+        -proto src/modules/cars/proto/cars.proto \
+        -d '{"id": "your-car-id-here"}' \
+        localhost:50051 cars.CarService/GetCar
+```
+Replace `"your-car-id-here"` with an actual car ID from your database.
+
+**Example: Calling `ListCars`**
+```bash
+grpcurl -plaintext \
+        -proto src/modules/cars/proto/cars.proto \
+        -d '{}' \
+        localhost:50051 cars.CarService/ListCars
+```
+
 ## Running Tests
 
 ```bash
@@ -181,3 +251,4 @@ npm run migration:revert
 5. Google redirects back to `/auth/google/signup/callback`
 6. Backend creates/updates user and generates JWT token
 7. User is redirected to frontend signup success page with token in URL parameter
+```

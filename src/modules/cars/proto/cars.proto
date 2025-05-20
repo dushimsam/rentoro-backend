@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package cars;
+
+service CarService {
+  rpc GetCar (GetCarRequest) returns (CarResponse);
+  rpc ListCars (ListCarsRequest) returns (CarsResponse);
+}
+
+message Car {
+  string id = 1;
+  string make = 2;
+  string model = 3;
+  int32 year = 4;
+  string license_plate = 5;
+  string color = 6;
+  double daily_rate = 7;
+  bool is_available = 8;
+  bool is_validated = 9;
+  string location = 10;
+  string description = 11;
+  string owner_id = 12;
+  repeated string image_urls = 13;
+  // Consider adding Timestamp for created_at and updated_at if needed by clients
+  // string created_at = 14;
+  // string updated_at = 15;
+}
+
+message GetCarRequest {
+  string id = 1;
+}
+
+message CarResponse {
+  Car car = 1;
+}
+
+message ListCarsRequest {
+  // Optional filters - can be expanded later
+  // string make = 1;
+  // string model = 2;
+  // int32 min_year = 3;
+  // bool available_only = 4;
+}
+
+message CarsResponse {
+  repeated Car cars = 1;
+}
